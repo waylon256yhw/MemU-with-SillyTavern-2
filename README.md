@@ -12,8 +12,8 @@ SillyTavern UI --> MemU Extension (React) --> SillyTavern Plugin (Express) --> M
 
 ## Repository Layout
 
-- `memu-sillytavern-extension/` ¨C React application injected into SillyTavern's front-end settings panel. Handles UI, local configuration, and the logic that decides when to send chats to MemU.
-- `memu-sillytavern-plugin/` ¨C Node/Express plugin packaged for SillyTavern's backend. Forwards HTTPS requests to the official `memu-js` SDK and returns task results to the browser.
+- `memu-sillytavern-extension/`  React application injected into SillyTavern's front-end settings panel. Handles UI, local configuration, and the logic that decides when to send chats to MemU.
+- `memu-sillytavern-plugin/`  Node/Express plugin packaged for SillyTavern's backend. Forwards HTTPS requests to the official `memu-js` SDK and returns task results to the browser.
 
 ## Main Features
 
