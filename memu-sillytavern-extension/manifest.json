@@ -5,8 +5,8 @@
     "optional": [],
     "js": "dist/index.js",
     "css": "",
-    "author": "MemU",
+    "author": "waylon",
     "version": "1.0.0",
-    "homePage": "https://github.com/NevaMind-AI/memu-sillytavern-extension",
+    "homePage": "https://github.com/waylon256yhw/MemU-with-SillyTavern-2",
     "auto_update": true
 }
