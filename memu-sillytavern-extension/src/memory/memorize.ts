@@ -1,24 +1,55 @@
 import { CategoryResponse } from "memu-js";
-import { API_KEY, memuExtras, st, Message, MessageCollection } from "utils/context-extra";
+import { API_KEY, FIRST_SUMMARY_FLOOR, SUMMARY_INTERVAL, memuExtras, st, Message, MessageCollection } from "utils/context-extra";
 import { memorizeConversation, retrieveDefaultCategories } from "utils/network";
 import { ConversationMessage, MemuSummary, MemuTaskStatus, STEventData } from "utils/types";
-import { sumTokens } from "./utils";
 
+let forceNextSummary = false;
 
 export async function summaryIfNeed(): Promise<void> {
-    const from = memuExtras.summary?.summaryRange?.[1] ?? 0;
-    const total = await sumTokens(from);
     const chat = st.getContext().chat;
-
-    console.log('memu-ext: now token accumulated: %d, max context: %d', total, st.getChatMaxContextSize());
-    if (total < st.getChatMaxContextSize()) {
+    if (!Array.isArray(chat) || chat.length === 0) {
+        forceNextSummary = false;
         return;
     }
 
-    await doSummary(from, chat.length - 1);
+    const from = memuExtras.summary?.summaryRange?.[1] ?? 0;
+    const latestIndex = chat.length - 1;
+    if (latestIndex <= from) {
+        forceNextSummary = false;
+        return;
+    }
+
+    const messagesSinceLast = latestIndex - from;
+    const hasSummary = memuExtras.summary?.summaryRange != null && memuExtras.summary.summaryRange.length === 2 && memuExtras.summary.summaryRange[1] > 0;
+    const threshold = hasSummary ? SUMMARY_INTERVAL.get() : FIRST_SUMMARY_FLOOR.get();
+
+    console.log(
+        'memu-ext: message count since last summary: %d, threshold: %d, force: %s',
+        messagesSinceLast,
+        threshold,
+        forceNextSummary,
+    );
+
+    if (!forceNextSummary && messagesSinceLast < threshold) {
+        return;
+    }
+
+    forceNextSummary = false;
+    await doSummary(from, latestIndex);
+}
+
+export function requestImmediateSummary(): void {
+    forceNextSummary = true;
+    summaryIfNeed().catch((error) => {
+        console.error('memu-ext: immediate summary failed', error);
+    });
 }
 
 export async function doSummary(from: number, to: number): Promise<void> {
+    if (to <= from) {
+        console.log('memu-ext: skip summary because range is empty', from, to);
+        return;
+    }
     const apiKey = API_KEY.get();
     if (apiKey == null) {
         // toastr.warning('Please set API key first');
@@ -29,7 +60,7 @@ export async function doSummary(from: number, to: number): Promise<void> {
         console.log('memu-ext: baseInfo not found');
         return;
     }
-    console.log('memu-ext: trigger memorize summary');
+    console.log('memu-ext: trigger memorize summary for range', from, to);
 
     try {
         const response = await memorizeConversation(

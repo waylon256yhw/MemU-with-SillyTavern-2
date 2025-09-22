@@ -1,5 +1,5 @@
 import { OVERRIDE_SUMMARIZER, st } from "utils/context-extra";
-import { addSummaryToPrompt, summaryIfNeed } from "./memorize";
+import { addSummaryToPrompt, requestImmediateSummary, summaryIfNeed } from "./memorize";
 import { setIsTerminated, startSummaryPolling, stopSummaryPolling } from "./summary-poller";
 import { initChatExtraInfo } from "./utils";
 
@@ -51,4 +51,10 @@ export function onChatChanged(): void {
         }
         void init();
     }
+}
+
+export function triggerImmediateSummary(): void {
+    try {
+        requestImmediateSummary();
+    } catch { }
 }

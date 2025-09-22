@@ -3,7 +3,14 @@ import { debounce_timeout } from "@silly-tavern/scripts/constants.js";
 import { promptManager, Message, MessageCollection } from "@silly-tavern/scripts/openai.js";
 import { getContext } from "@silly-tavern/scripts/st-context.js";
 import { debounce } from "@silly-tavern/scripts/utils.js";
-import { MEMU_LOCAL_STORAGE_API_KEY, MEMU_LOCAL_STORAGE_OVERRIDE_SUMMARIZER } from "./consts";
+import {
+    MEMU_DEFAULT_FIRST_SUMMARY_FLOOR,
+    MEMU_DEFAULT_SUMMARY_INTERVAL,
+    MEMU_LOCAL_STORAGE_API_KEY,
+    MEMU_LOCAL_STORAGE_FIRST_SUMMARY_FLOOR,
+    MEMU_LOCAL_STORAGE_OVERRIDE_SUMMARIZER,
+    MEMU_LOCAL_STORAGE_SUMMARY_INTERVAL,
+} from "./consts";
 import { MemuBaseInfo, MemuExtras, MemuRetrieve, MemuSummary } from "./types";
 
 const originExtras: MemuExtras = {}
@@ -36,6 +43,33 @@ export const API_KEY = {
 export const OVERRIDE_SUMMARIZER = {
     get: () => localStorage.getItem(MEMU_LOCAL_STORAGE_OVERRIDE_SUMMARIZER) !== 'false',
     set: (value: boolean) => localStorage.setItem(MEMU_LOCAL_STORAGE_OVERRIDE_SUMMARIZER, value.toString()),
+}
+
+function readNumberSetting(key: string, fallback: number): number {
+    const raw = localStorage.getItem(key);
+    if (raw == null) {
+        return fallback;
+    }
+    const parsed = Number.parseInt(raw, 10);
+    if (Number.isNaN(parsed) || parsed <= 0) {
+        return fallback;
+    }
+    return parsed;
+}
+
+function writeNumberSetting(key: string, value: number): void {
+    const normalized = Math.max(1, Math.floor(value));
+    localStorage.setItem(key, normalized.toString());
+}
+
+export const FIRST_SUMMARY_FLOOR = {
+    get: () => readNumberSetting(MEMU_LOCAL_STORAGE_FIRST_SUMMARY_FLOOR, MEMU_DEFAULT_FIRST_SUMMARY_FLOOR),
+    set: (value: number) => writeNumberSetting(MEMU_LOCAL_STORAGE_FIRST_SUMMARY_FLOOR, value),
+}
+
+export const SUMMARY_INTERVAL = {
+    get: () => readNumberSetting(MEMU_LOCAL_STORAGE_SUMMARY_INTERVAL, MEMU_DEFAULT_SUMMARY_INTERVAL),
+    set: (value: number) => writeNumberSetting(MEMU_LOCAL_STORAGE_SUMMARY_INTERVAL, value),
 }
 
 export const memuExtras = new Proxy<MemuExtras>(originExtras, {
